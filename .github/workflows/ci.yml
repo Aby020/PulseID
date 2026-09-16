@@ -1,0 +1,118 @@
+# =====================================================================
+# PulseID — Foundation CI
+# =====================================================================
+#
+# Foundation-oriented checks only: repository structure, Markdown
+# consistency, and config sanity. Runs on every PR and push to main.
+#
+# Python/Node application checks will be added in later phases, once
+# the backend and web/mobile apps are scaffolded.
+# =====================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  structure:
+    name: Repository structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify monorepo directories exist
+        run: |
+          for dir in backend web mobile infra scripts docs .github/workflows; do
+            if [ ! -d "$dir" ]; then
+              echo "::error::Missing required directory: $dir"
+              exit 1
+            fi
+          done
+          echo "All required directories present."
+
+      - name: Verify root foundation files exist
+        run: |
+          for file in README.md LICENSE Makefile .gitignore .env.example; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Missing required file: $file"
+              exit 1
+            fi
+          done
+          echo "All required foundation files present."
+
+      - name: Verify planning documentation exists
+        run: |
+          for doc in PRODUCT_REQUIREMENTS.md ARCHITECTURE.md ROADMAP.md \
+                     DECISIONS.md PROJECT_STRUCTURE.md RISKS.md; do
+            if [ ! -f "docs/$doc" ]; then
+              echo "::error::Missing planning document: docs/$doc"
+              exit 1
+            fi
+          done
+          echo "All planning documents present."
+
+  markdown:
+    name: Markdown consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check no test secrets are committed
+        run: |
+          # .env must never be committed; .env.example is the only allowed template
+          if [ -f ".env" ]; then
+            echo "::error::A .env file is committed. Remove it."
+            exit 1
+          fi
+          echo "No committed .env files."
+
+      - name: Verify .env.example has no real credentials
+        run: |
+          # Guard against accidentally committing a real secret pattern
+          if grep -RInE "(AKIA[0-9A-Z]{16}|ghp_[0-9A-Za-z]{36}|sk-[0-9a-zA-Z]{20,}|BEGIN (RSA|OPENSSH) PRIVATE KEY)" \
+              --include="*.env.example" .; then
+            echo "::error::Possible real secret found in .env.example"
+            exit 1
+          fi
+          echo "No obvious secret patterns in .env.example."
+
+      - name: Check no application scaffolding was accidentally committed
+        run: |
+          # During the foundation phase there should be no Django project,
+          # package.json, or Expo config yet. This is a placeholder check
+          # that gets relaxed in later phases.
+          echo "Application scaffolding checks will be added in later phases."
+
+  config:
+    name: Config sanity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Makefile targets
+        run: |
+          for target in setup backend web mobile test lint format docker-up docker-down; do
+            if ! grep -q "^$target:" Makefile; then
+              echo "::error::Makefile is missing required target: $target"
+              exit 1
+            fi
+          done
+          echo "Makefile contains all required targets."
+
+      - name: Validate README references
+        run: |
+          # Every planning doc referenced in README must exist under docs/
+          for doc in PRODUCT_REQUIREMENTS.md ARCHITECTURE.md ROADMAP.md \
+                     DECISIONS.md PROJECT_STRUCTURE.md RISKS.md; do
+            if [ ! -f "docs/$doc" ]; then
+              echo "::error::README references docs/$doc but it does not exist."
+              exit 1
+            fi
+          done
+          echo "README references verified."

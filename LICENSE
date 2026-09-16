@@ -1,0 +1,22 @@
+# License
+
+**⚠️ License decision pending.**
+
+The PulseID project has not yet made a licensing decision. This placeholder
+is tracked to keep the repository structure complete; it does not grant any
+rights.
+
+The license will be chosen and this file replaced when:
+
+- The project is confirmed to be open source (and which license — e.g., MIT,
+  Apache-2.0, AGPL-3.0 — fits the intended use), **or**
+- A proprietary license / no-license posture is decided for the project.
+
+Until then, all rights are reserved and no license is granted.
+
+---
+
+This placeholder exists only because the planning documents
+(`docs/PRODUCT_REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`)
+do not specify a license. No licensing decision should be inferred from the
+mere presence of this file.
